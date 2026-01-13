@@ -1,9 +1,14 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { initializeDatabase } from './config/init.js';
+import { createClient } from '@supabase/supabase-js';
 
 dotenv.config();
+
+const supabaseUrl = process.env.SUPABASE_URL || "";
+const supabaseKey = process.env.SUPABASE_KEY || "";
+
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -12,34 +17,28 @@ app.use(cors());
 app.use(express.json());
 
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'Backend is running!' });
+  res.json({ status: 'OK' });
 });
 
-app.get('/', (req, res) => {
-  res.json({ message: 'Welcome to PostgreSQL React API' });
-});
+// Test Supabase connection
+async function testSupabaseConnection() {
+  try {
+    console.log("Testing Supabase connection...");
+    const { count, error } = await supabase
+      .from('error_logs')
+      .select('*', { count: 'exact', head: true });
 
-app.get('/api/debug/env', (req, res) => {
-  res.json({
-    DB_HOST: process.env.DB_HOST,
-    DB_PORT: process.env.DB_PORT,
-    DB_NAME: process.env.DB_NAME,
-    DB_USER: process.env.DB_USER,
-    hasPassword: !!process.env.DB_PASSWORD,
-  });
-});
+    if (error) {
+      console.error("Supabase error:", error);
+    } else {
+      console.log("✅ Supabase connected! Row count:", count);
+    }
+  } catch (err) {
+    console.error("Connection failed:", err);
+  }
+}
 
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error(err.stack);
-  res.status(500).json({ error: 'Internal Server Error' });
-});
-
-// Start server first
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
-});
-
-// Initialize database in background
-initializeDatabase().catch(err => {
-  console.error('Database initialization failed:', err);
+  testSupabaseConnection();
 });
