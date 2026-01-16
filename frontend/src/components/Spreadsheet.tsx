@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface Cell {
   value: string;
@@ -41,6 +41,39 @@ function Spreadsheet() {
   const [selectedCell, setSelectedCell] = useState<{ row: number; col: number } | null>(null);
 
   const activeSheet = sheets.find(s => s.id === activeSheetId)!;
+
+    useEffect(() => {
+    const fetchTables = async () => {
+      try {
+        console.log('Fetching tables from /api/tables...');
+        const response = await fetch('http://localhost:5000/api/tables');
+        const data = await response.json();
+        console.log('API Response:', data);
+        console.log('Tables:', data.tables);
+        console.log('Is Array?', Array.isArray(data.tables));
+        console.log('First item:', data.tables?.[0]);
+        
+        if (data.tables && Array.isArray(data.tables) && data.tables.length > 0) {
+          const newSheets = data.tables.map((table: any, index: number) => {
+            const tableName = table.table_name || table;
+            console.log(`Creating sheet ${index}:`, tableName);
+            return createEmptySheet(`sheet-${index}`, tableName);
+          });
+          console.log('New sheets created:', newSheets);
+          setSheets(newSheets);
+          if (newSheets.length > 0) {
+            setActiveSheetId(newSheets[0].id);
+          }
+        } else {
+          console.error('No tables found or invalid data format');
+        }
+      } catch (err) {
+        console.error('Error fetching tables:', err);
+      }
+    };
+
+    fetchTables();
+  }, []);
 
   const handleCellChange = (rowIndex: number, colIndex: number, value: string) => {
     setSheets(prevSheets =>

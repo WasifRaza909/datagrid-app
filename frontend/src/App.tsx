@@ -2,7 +2,11 @@ import './App.css'
 import Spreadsheet from './components/Spreadsheet'
 
 function App() {
-  return <Spreadsheet />
+  return (
+    <>
+      <Spreadsheet />
+    </>
+  )
 }
 
 export default App

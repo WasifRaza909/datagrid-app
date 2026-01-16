@@ -20,6 +20,25 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'OK' });
 });
 
+// Get all table names
+app.get('/api/tables', async (req, res) => {
+  try {
+    // Call the Supabase RPC function
+    const { data, error } = await supabase.rpc('get_table_names');
+
+    if (error) {
+      console.error("Supabase RPC error:", error);
+      return res.status(500).json({ error: error.message });
+    }
+
+    // Return data as-is (it's already in the right format from the RPC)
+    res.json({ tables: data || [] });
+  } catch (err) {
+    console.error("Server error:", err);
+    res.status(500).json({ error: 'Failed to fetch table names' });
+  }
+});
+
 // Test Supabase connection
 async function testSupabaseConnection() {
   try {
