@@ -9,6 +9,7 @@ interface Cell {
 interface Sheet {
   id: string;
   name: string;
+  tableName?: string;
   data: Cell[][];
 }
 
@@ -44,6 +45,7 @@ function Spreadsheet() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalRows, setTotalRows] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const ROWS_PER_PAGE = 100;
   const pageCache = useRef<Map<number, Sheet>>(new Map());
 
@@ -121,6 +123,7 @@ const fetchTableByName = async (tableName: string, page: number = 1) => {
           
           // Add 1 extra row for headers
           const newSheet = createEmptySheet(`sheet-${tableName}`, tableName, data.rows.length + 1);
+          newSheet.tableName = tableName;
           
           // Populate sheet with fetched data
           if (Array.isArray(data.rows) && data.rows.length > 0) {
@@ -213,6 +216,75 @@ const fetchTableByName = async (tableName: string, page: number = 1) => {
     );
   };
 
+  const generateCSV = async () => {
+    try {
+      setIsExporting(true);
+      const tableName = activeSheet.tableName || activeSheet.name;
+      
+      console.log(`Fetching all data for table "${tableName}" for CSV export...`);
+      const encodedTableName = encodeURIComponent(tableName);
+      const response = await fetch(`${getBaseUrl()}/api/tables/${encodedTableName}/export`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log(`Fetched ${data.total} rows for export`);
+      
+      if (!data.rows || data.rows.length === 0) {
+        alert('No data available to export');
+        return;
+      }
+      
+      // Get column headers from the first row
+      const columnNames = Object.keys(data.rows[0]);
+      
+      // Create CSV rows - header row + data rows
+      const csvRows = [
+        // Header row
+        columnNames.map(name => {
+          if (name.includes(',') || name.includes('"') || name.includes('\n')) {
+            return `"${name.replace(/"/g, '""')}"`;
+          }
+          return name;
+        }).join(','),
+        // Data rows
+        ...data.rows.map((row: any) => 
+          columnNames.map(col => {
+            const value = String(row[col] ?? '');
+            if (value.includes(',') || value.includes('"') || value.includes('\n')) {
+              return `"${value.replace(/"/g, '""')}"`;
+            }
+            return value;
+          }).join(',')
+        )
+      ];
+      
+      const csvContent = csvRows.join('\n');
+      
+      // Create blob and download
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      
+      link.setAttribute('href', url);
+      link.setAttribute('download', `${tableName}_${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      console.log(`CSV export completed: ${data.total} rows exported`);
+    } catch (error) {
+      console.error('Error generating CSV:', error);
+      alert('Failed to export CSV. Please try again.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   return (
     <div className="flex flex-col h-screen bg-slate-50 font-sans">
       {/* Header */}
@@ -222,11 +294,35 @@ const fetchTableByName = async (tableName: string, page: number = 1) => {
             <h1 className="text-2xl sm:text-3xl font-bold">Data Grid</h1>
             <p className="text-sky-100 text-sm mt-1">Manage and explore your data</p>
           </div>
-          {totalRows > 0 && (
-            <div className="text-xs sm:text-sm opacity-95 bg-sky-500 bg-opacity-50 rounded-lg px-3 py-2 w-fit">
-              <span className="font-semibold">Total:</span> {totalRows} rows
-            </div>
-          )}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={generateCSV}
+              disabled={isExporting}
+              className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150 shadow-md hover:shadow-lg"
+            >
+              {isExporting ? (
+                <>
+                  <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Exporting...
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  Export CSV
+                </>
+              )}
+            </button>
+            {totalRows > 0 && (
+              <div className="text-xs sm:text-sm opacity-95 bg-sky-500 bg-opacity-50 rounded-lg px-3 py-2 w-fit">
+                <span className="font-semibold">Total:</span> {totalRows} rows
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

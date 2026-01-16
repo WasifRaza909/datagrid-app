@@ -88,6 +88,64 @@ app.get('/api/tables/:name', async (req, res) => {
   }
 });
 
+// Get all table data (no pagination) - for CSV export
+app.get('/api/tables/:name/export', async (req, res) => {
+  const tableName = req.params.name;
+  const BATCH_SIZE = 1000;
+
+  // Basic validation to avoid invalid identifiers
+  if (!tableName) {
+    return res.status(400).json({ error: 'Table is not defined' });
+  }
+
+  try {
+    // Get total count first
+    const { count, error: countError } = await supabase
+      .from(tableName)
+      .select('*', { count: 'exact', head: true });
+
+    if (countError) {
+      console.error("Supabase count error:", countError);
+      return res.status(500).json({ error: countError.message });
+    }
+
+    const totalRows = count || 0;
+    console.log(`Exporting ${totalRows} rows from ${tableName} in batches of ${BATCH_SIZE}`);
+
+    // Fetch all data in batches
+    const allData: any[] = [];
+    const numBatches = Math.ceil(totalRows / BATCH_SIZE);
+
+    for (let i = 0; i < numBatches; i++) {
+      const start = i * BATCH_SIZE;
+      const end = start + BATCH_SIZE - 1;
+      
+      const { data, error } = await supabase
+        .from(tableName)
+        .select('*')
+        .range(start, end);
+
+      if (error) {
+        console.error(`Supabase error fetching batch ${i + 1}:`, error);
+        return res.status(500).json({ error: error.message });
+      }
+
+      allData.push(...(data || []));
+      console.log(`Fetched batch ${i + 1}/${numBatches} (${data?.length || 0} rows)`);
+    }
+    
+    console.log(`Export complete: ${allData.length} total rows fetched`);
+    res.json({ 
+      table: tableName, 
+      rows: allData,
+      total: allData.length
+    });
+  } catch (err) {
+    console.error("Server error:", err);
+    res.status(500).json({ error: 'Failed to fetch table data for export' });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
