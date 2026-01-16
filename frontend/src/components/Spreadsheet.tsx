@@ -46,7 +46,7 @@ function Spreadsheet() {
     const fetchTables = async () => {
       try {
         console.log('Fetching tables from /api/tables...');
-        const response = await fetch('http://localhost:5000/api/tables');
+        const response = await fetch('https://datagrid-app-l1ar.onrender.com/api/tables');
         const data = await response.json();
         console.log('API Response:', data);
         console.log('Tables:', data.tables);
