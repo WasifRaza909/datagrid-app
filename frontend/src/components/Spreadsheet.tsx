@@ -94,26 +94,26 @@ function Spreadsheet() {
     );
   };
 
-  const addNewSheet = () => {
-    const newSheetNumber = sheets.length + 1;
-    const newSheet = createEmptySheet(
-      `sheet-${Date.now()}`,
-      `Sheet${newSheetNumber}`
-    );
-    setSheets([...sheets, newSheet]);
-    setActiveSheetId(newSheet.id);
-  };
+  // const addNewSheet = () => {
+  //   const newSheetNumber = sheets.length + 1;
+  //   const newSheet = createEmptySheet(
+  //     `sheet-${Date.now()}`,
+  //     `Sheet${newSheetNumber}`
+  //   );
+  //   setSheets([...sheets, newSheet]);
+  //   setActiveSheetId(newSheet.id);
+  // };
 
-  const deleteSheet = (sheetId: string) => {
-    if (sheets.length === 1) return; // Don't delete the last sheet
+  // const deleteSheet = (sheetId: string) => {
+  //   if (sheets.length === 1) return; // Don't delete the last sheet
     
-    const newSheets = sheets.filter(s => s.id !== sheetId);
-    setSheets(newSheets);
+  //   const newSheets = sheets.filter(s => s.id !== sheetId);
+  //   setSheets(newSheets);
     
-    if (activeSheetId === sheetId) {
-      setActiveSheetId(newSheets[0].id);
-    }
-  };
+  //   if (activeSheetId === sheetId) {
+  //     setActiveSheetId(newSheets[0].id);
+  //   }
+  // };
 
   const renameSheet = (sheetId: string, newName: string) => {
     setSheets(prevSheets =>
