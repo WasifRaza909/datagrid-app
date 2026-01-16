@@ -52,7 +52,7 @@ function Spreadsheet() {
   // Toggle to make sheet tabs editable in future
   const TABS_EDITABLE = false;
   // Toggle to make cells editable in future
-  const CELLS_EDITABLE = false;
+  // const CELLS_EDITABLE = false;
 
   const activeSheet = sheets.find(s => s.id === activeSheetId)!;
 
@@ -168,24 +168,24 @@ const fetchTableByName = async (tableName: string, page: number = 1) => {
     // fetchAllTableHeaders();
   }, []);
 
-  const handleCellChange = (rowIndex: number, colIndex: number, value: string) => {
-    setSheets(prevSheets =>
-      prevSheets.map(sheet =>
-        sheet.id === activeSheetId
-          ? {
-              ...sheet,
-              data: sheet.data.map((row, rIdx) =>
-                rIdx === rowIndex
-                  ? row.map((cell, cIdx) =>
-                      cIdx === colIndex ? { value } : cell
-                    )
-                  : row
-              ),
-            }
-          : sheet
-      )
-    );
-  };
+  // const handleCellChange = (rowIndex: number, colIndex: number, value: string) => {
+  //   setSheets(prevSheets =>
+  //     prevSheets.map(sheet =>
+  //       sheet.id === activeSheetId
+  //         ? {
+  //             ...sheet,
+  //             data: sheet.data.map((row, rIdx) =>
+  //               rIdx === rowIndex
+  //                 ? row.map((cell, cIdx) =>
+  //                     cIdx === colIndex ? { value } : cell
+  //                   )
+  //                 : row
+  //             ),
+  //           }
+  //         : sheet
+  //     )
+  //   );
+  // };
 
   // const addNewSheet = () => {
   //   const newSheetNumber = sheets.length + 1;
