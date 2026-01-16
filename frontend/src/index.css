@@ -2,60 +2,52 @@
 
 @layer base {
   body {
-    @apply m-0 font-sans antialiased;
+    @apply m-0 font-sans antialiased bg-slate-50 text-slate-900;
   }
 }
 
 a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
+  @apply font-medium text-sky-600 no-underline;
 }
 a:hover {
-  color: #535bf2;
-}
-
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+  @apply text-sky-700;
 }
 
 h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+  @apply text-3xl leading-tight font-bold tracking-tight;
+}
+
+h2 {
+  @apply text-2xl leading-tight font-bold;
+}
+
+h3 {
+  @apply text-xl leading-tight font-semibold;
 }
 
 button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
+  @apply rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-medium cursor-pointer transition-all duration-150;
+  @apply bg-white text-slate-700 hover:bg-slate-50 hover:border-slate-400;
 }
-button:hover {
-  border-color: #646cff;
-}
+
 button:focus,
 button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  @apply outline-none ring-2 ring-sky-500 ring-offset-2;
+}
+
+button:disabled {
+  @apply opacity-50 cursor-not-allowed;
 }
 
 @media (prefers-color-scheme: light) {
   :root {
-    color: #213547;
-    background-color: #ffffff;
+    color: #1e293b;
+    background-color: #f8fafc;
   }
   a:hover {
-    color: #747bff;
+    color: #0369a1;
   }
   button {
-    background-color: #f9f9f9;
+    background-color: #ffffff;
   }
 }

@@ -39,25 +39,55 @@ app.get('/api/tables', async (req, res) => {
   }
 });
 
-// Test Supabase connection
-async function testSupabaseConnection() {
+app.get('/api/tables/:name', async (req, res) => {
+  const tableName = req.params.name;
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = parseInt(req.query.limit as string) || 500;
+  const offset = (page - 1) * limit;
+
+  // Basic validation to avoid invalid identifiers
+  if (!tableName) {
+    return res.status(400).json({ error: 'Table is not defined' });
+  }
+
   try {
-    console.log("Testing Supabase connection...");
-    const { count, error } = await supabase
-      .from('error_logs')
+    // Get total count
+    const { count, error: countError } = await supabase
+      .from(tableName)
       .select('*', { count: 'exact', head: true });
+
+    if (countError) {
+      console.error("Supabase count error:", countError);
+      return res.status(500).json({ error: countError.message });
+    }
+
+    // Get paginated data
+    const { data, error } = await supabase
+      .from(tableName)
+      .select('*')
+      .range(offset, offset + limit - 1);
 
     if (error) {
       console.error("Supabase error:", error);
-    } else {
-      console.log("✅ Supabase connected! Row count:", count);
+      return res.status(500).json({ error: error.message });
     }
+    
+    res.json({ 
+      table: tableName, 
+      rows: data || [], 
+      pagination: {
+        page,
+        limit,
+        total: count || 0,
+        totalPages: Math.ceil((count || 0) / limit)
+      }
+    });
   } catch (err) {
-    console.error("Connection failed:", err);
+    console.error("Server error:", err);
+    res.status(500).json({ error: 'Failed to fetch table data' });
   }
-}
+});
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
-  testSupabaseConnection();
 });
