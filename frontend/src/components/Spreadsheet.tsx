@@ -47,6 +47,11 @@ function Spreadsheet() {
   const ROWS_PER_PAGE = 100;
   const pageCache = useRef<Map<number, Sheet>>(new Map());
 
+  // Toggle to make sheet tabs editable in future
+  const TABS_EDITABLE = false;
+  // Toggle to make cells editable in future
+  const CELLS_EDITABLE = false;
+
   const activeSheet = sheets.find(s => s.id === activeSheetId)!;
 
 
@@ -312,18 +317,15 @@ const fetchTableByName = async (tableName: string, page: number = 1) => {
                     }`}
                     onClick={() => setSelectedCell({ row: rowIndex, col: colIndex })}
                   >
-                    <input
-                      type="text"
-                      value={cell.value}
-                      onChange={(e) => handleCellChange(rowIndex, colIndex, e.target.value)}
-                      onFocus={() => setSelectedCell({ row: rowIndex, col: colIndex })}
-                      className={`w-full h-full border-none outline-none px-3 py-2 text-sm bg-transparent font-medium transition-all duration-150 ${
+                    <span
+                      className={`block w-full h-full px-3 py-2 text-sm font-medium ${
                         rowIndex === 0 
                           ? 'font-bold text-slate-700' 
                           : 'text-slate-800'
                       }`}
-                      readOnly={rowIndex === 0}
-                    />
+                    >
+                      {cell.value}
+                    </span>
                   </td>
                 ))}
               </tr>
@@ -355,8 +357,9 @@ const fetchTableByName = async (tableName: string, page: number = 1) => {
               <input
                 type="text"
                 value={sheet.name}
-                onChange={(e) => renameSheet(sheet.id, e.target.value)}
+                onChange={(e) => TABS_EDITABLE ? renameSheet(sheet.id, e.target.value) : null}
                 className="border-none bg-transparent outline-none text-sm font-medium cursor-pointer w-full"
+                readOnly={!TABS_EDITABLE}
               />
             </div>
           ))}
